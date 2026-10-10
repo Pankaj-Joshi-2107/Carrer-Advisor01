@@ -3,6 +3,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { RoadmapData } from '@/types/roadmap';
 import { JobTitleSchema } from '@/schemas/jobTitleSchema';
+import { requestGeminiCompletion } from '@/utils/gemini';
 
 interface RequestBody {
   jobTitle: string;
@@ -54,15 +55,23 @@ export async function POST(request: Request) {
     }
 
     const jobTitle = validationResult.data;
+
+    if (!process.env.GEMINI_API_KEY || !process.env.GEMINI_MODEL) {
+      return NextResponse.json(
+        { message: 'Roadmap generation needs GEMINI_API_KEY and GEMINI_MODEL configured.' },
+        { status: 503 },
+      );
+    }
+
     
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const { response } = await requestGeminiCompletion({
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json'
+                Authorization: `Bearer ${process.env.GEMINI_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        'model': process.env.OPENROUTER_ROADMAP_MODEL,
+        'model': process.env.GEMINI_MODEL,
         'messages': [
           {
             'role': 'user',
@@ -229,7 +238,7 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('OpenRouter API error:', errorData);
+      console.error('Gemini API error:', errorData);
       return NextResponse.json(
         { message: 'Failed to generate roadmap. Please try again later.' },
         { status: 500 }

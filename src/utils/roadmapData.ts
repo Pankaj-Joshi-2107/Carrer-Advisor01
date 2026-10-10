@@ -1,7 +1,8 @@
 import { Node, Edge, Position } from '@xyflow/react';
 import { RoadmapData } from '../types/roadmap';
+import { TopicProgress } from '../types/learning';
 
-export function generateFlowData(data: RoadmapData): { nodes: Node[], edges: Edge[] } {
+export function generateFlowData(data: RoadmapData, topicProgress: Record<string, TopicProgress> = {}): { nodes: Node[], edges: Edge[] } {
   const initialNodes: Node[] = [];
   const initialEdges: Edge[] = [];
   
@@ -110,10 +111,16 @@ export function generateFlowData(data: RoadmapData): { nodes: Node[], edges: Edg
           type: 'custom',
           position: { x: xOffset, y: yOffset + rowOffset + 80 },
           data: {
+            topicId: node.id,
             name: node.name,
             description: node.description,
             type: node.type,
             group: node.group,
+            topicStatus: topicProgress[node.id]?.completed
+              ? 'Completed'
+              : topicProgress[node.id]?.started
+                ? 'In progress'
+                : 'Not started',
             hasIncoming: Boolean(connections.hasIncoming),
             hasOutgoing: Boolean(connections.hasOutgoing)
           },

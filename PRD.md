@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-The Career Advisor is an AI-powered web application that generates detailed career roadmaps for various job titles. Using OpenRouter API to leverage AI models, the application creates visualizations of skills, technologies, and knowledge areas required for specific career paths.
+The Career Advisor is an AI-powered web application that generates detailed career roadmaps for various job titles. Using the Google Gemini API through Google AI Studio, the application creates visualizations of skills, technologies, and knowledge areas required for specific career paths.
 
 ## 2. Target Audience
 
@@ -18,7 +18,7 @@ The Career Advisor is an AI-powered web application that generates detailed care
 |----------|------------|---------|
 | Frontend Framework | Next.js | React framework for building the UI |
 | Styling | TailwindCSS | Utility-first CSS framework |
-| AI Integration | OpenRouter API | Powers the roadmap generation engine |
+| AI Integration | Google Gemini API | Powers roadmap and topic lesson generation |
 | Visualization | ReactFlow | Career path diagrams |
 | Validation | Zod | Schema validation and type safety |
 
@@ -149,9 +149,9 @@ The Career Advisor is an AI-powered web application that generates detailed care
 }
 ```
 
-### 7.2 OpenRouter AI Prompt
+### 7.2 Gemini AI Prompt
 
-The key to the application is the prompt used with OpenRouter API:
+The key to the application is the prompt sent to the Google Gemini API:
 
 Generate a detailed learning roadmap for a {jobTitle}. The response MUST be a valid JSON object with the following structure:
 
@@ -299,9 +299,9 @@ Create a `.env.local` file with the following variables:
 
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
-OPENROUTER_API_KEY=your_openrouter_api_key
-OPENROUTER_CHECK_MODEL=google/gemini-flash-1.5-8b
-OPENROUTER_ROADMAP_MODEL=openai/o3-mini-high
+GEMINI_API_KEY=your_google_ai_studio_api_key
+GEMINI_MODEL=gemini-3.8-flash
+GEMINI_FALLBACK_MODELS=gemini-3.1-pro-preview,gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.5-pro,gemini-3.1-pro-preview-customtools
 ```
 
 ## 10. Development Steps
@@ -318,7 +318,7 @@ OPENROUTER_ROADMAP_MODEL=openai/o3-mini-high
 
 3. **API Integration**
    - Set up API route for roadmap generation
-   - Implement OpenRouter API integration
+   - Implement Google Gemini API integration
    - Add response validation and error handling
 
 4. **UI Refinement**
@@ -379,4 +379,3 @@ OPENROUTER_ROADMAP_MODEL=openai/o3-mini-high
    - All interactive elements MUST be keyboard accessible
    - Application MUST maintain proper contrast ratios for text readability
    - Application MUST work with screen readers
-

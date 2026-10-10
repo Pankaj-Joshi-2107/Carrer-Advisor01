@@ -25,7 +25,7 @@ Built with Next.js and ReactFlow, the application displays intuitive, color-code
   - [Installation](#installation)
 - [Usage](#-usage)
 - [Configuration](#️-configuration)
-  - [OpenRouter Models](#openrouter-models)
+  - [Gemini Models](#gemini-models)
   - [Rate Limiting](#rate-limiting)
 - [Project Structure](#️-project-structure)
 - [Troubleshooting](#-troubleshooting)
@@ -45,7 +45,7 @@ Built with Next.js and ReactFlow, the application displays intuitive, color-code
 - [Next.js](https://nextjs.org/)
 - [TailwindCSS](https://tailwindcss.com/)
 - [ReactFlow](https://reactflow.dev/)
-- [OpenRouter API](https://openrouter.ai/)
+- [Google Gemini API](https://ai.google.dev/gemini-api/docs)
 - [Upstash Redis](https://upstash.com/)
 - [Zod](https://zod.dev/)
 
@@ -54,7 +54,7 @@ Built with Next.js and ReactFlow, the application displays intuitive, color-code
 ### Prerequisites
 - Node.js (22.14.0, earlier versions were not included in the testing)
 - npm or yarn
-- [OpenRouter](https://openrouter.ai/) account for AI model access
+- [Google AI Studio](https://aistudio.google.com/) API key for Gemini access
 - [Upstash](https://upstash.com/) account for rate limiting functionality
 
 ### Installation
@@ -79,15 +79,13 @@ cp .env.example .env.local
 # Application URL (Used for metadata generation in the application)
 NEXT_PUBLIC_URL=http://localhost:3000
 
-# OpenRouter Configuration
-# Get your API key from https://openrouter.ai/keys
-OPENROUTER_API_KEY=<your-openrouter-api-key>
-# Recommended model: google/gemini-2.0-flash-lite-001
-# See https://openrouter.ai/models for available models
-OPENROUTER_CHECK_MODEL=<your-openrouter-check-model>
-OPENROUTER_ROADMAP_MODEL=<your-openrouter-roadmap-model>
+# Gemini Configuration
+# Get an API key from https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=<your-gemini-api-key>
+# Use a Gemini model available to your Google AI Studio project
+GEMINI_MODEL=gemini-3.8-flash
 
-# Upstash Redis Configuration for Rate Limiting
+# Upstash Redis Configuration for shared public roadmaps and API rate limiting
 # Create a Redis database at https://upstash.com/ and use the provided REST credentials
 UPSTASH_REDIS_REST_URL=<your-upstash-redis-rest-url>
 UPSTASH_REDIS_REST_TOKEN=<your-upstash-redis-rest-token>
@@ -119,35 +117,39 @@ npm run dev
    - Orange boxes: Complementary skills (low priority)
 6. Explore the details by zooming in and out of your roadmap
 7. Optionally download your roadmap as an image for your career planning
+8. Click a roadmap node to open its generated lesson, practice activities, and knowledge check
+9. Mark topics and activities complete to track local learning progress
+10. Choose **Create Custom Roadmap** to build an independent draft, connect prerequisites, and request AI review or topic/project suggestions. Custom drafts autosave in this browser and can be exported as JSON backups.
 
 ## ⚙️ Configuration
 
-### OpenRouter Models
-This application uses OpenRouter to access various AI models. Different models will provide varying quality results:
-
-- `google/gemini-2.0-flash-lite-001` - Recommended for cost-effectiveness and good quality roadmaps
-- `openai/o3-mini-high` - Higher quality results with more nuanced roadmaps
-- `anthropic/claude-3-opus` - Premium option for the most detailed and comprehensive roadmaps
-
-Set `OPENROUTER_ROADMAP_MODEL` in your `.env.local` file to choose the model that generates roadmaps. Job titles are checked locally for valid length and characters before the request.
+### Gemini Models
+This application uses the Google Gemini API through Google AI Studio for both roadmap and lesson generation. Job titles and lesson inputs are validated before requests are sent.
 
 #### Model Environment Variables
-- `OPENROUTER_ROADMAP_MODEL`: This model generates the comprehensive career roadmap content. It receives a complex prompt requesting detailed skill hierarchies in a specific JSON format. This task benefits from more capable models with strong reasoning and structuring abilities.
+- `GEMINI_API_KEY`: A server-side API key created in Google AI Studio. Never expose it in client-side code.
+- `GEMINI_MODEL`: A Gemini model ID enabled for your AI Studio project. The same model is used for roadmaps and topic lessons.
+- `GEMINI_FALLBACK_MODELS` (optional): Up to five comma-separated Gemini model IDs tried in order if the primary model is rate-limited, unavailable, or returns a temporary server error. Use text-generation models enabled for your AI Studio project.
 
 The recommended starting configuration is:
 
 ```
-OPENROUTER_ROADMAP_MODEL=google/gemini-2.0-flash-lite-001
-```
-
-For higher quality results, especially for specialized or technical roles, consider:
-
-```
-OPENROUTER_ROADMAP_MODEL=anthropic/claude-3-opus
+GEMINI_MODEL=gemini-3.8-flash
+GEMINI_FALLBACK_MODELS=gemini-3.1-pro-preview,gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.5-pro,gemini-3.1-pro-preview-customtools
 ```
 
 ### Rate Limiting
 The application includes rate limiting to prevent abuse. By default, it allows 5 requests per minute per IP address. You can adjust this by changing the `RATE_LIMIT_REQUESTS_PER_MINUTE` value in your `.env.local` file. For local development without Upstash Redis, set `DISABLE_RATE_LIMIT=true`; this setting is ignored in production.
+Gemini API quotas and rate limits are managed by Google AI Studio. Requests try the primary model and then up to five configured fallback models for rate limits, unavailable models, and temporary provider errors. Check the project quota and model access if all configured models fail.
+
+### Interactive Learning and Roadmap Library
+- Selecting a roadmap node requests an AI-generated lesson with prerequisites, objectives, examples, resources, activities, and a knowledge check. Verify generated facts and links before relying on them.
+- The custom roadmap builder is an independent local draft: add, edit, move, and connect nodes; self-links and circular prerequisites are blocked. AI review and topic/project suggestions are shown for approval and do not silently replace draft content. Drafts remain in this browser unless exported; this prototype does not sync drafts across devices.
+- Topic/activity completion and the most recent generated roadmap are saved in browser local storage. Progress is kept separately for each generated roadmap in that browser.
+- **Publish Roadmap** stores listings in the shared Upstash Redis database. Public listings appear in **Explore Roadmaps** for every visitor; unlisted and private listings are stored online but hidden from public browsing.
+- A private owner token is stored in the publishing browser so its publisher can update or remove a listing without an account. Clearing that browser's site data loses owner access; do not share the token. Owner tokens are hashed before being stored in Redis.
+- Follows and learning progress stay in the current browser and are not community analytics. Career-outcome statistics are not displayed because verified, consented records are not configured.
+- To enable shared publishing on the deployed website, set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in the deployment's server-side environment settings. The same Upstash database can be used for rate limiting and shared listings. The API returns a configuration error rather than silently falling back to browser-only storage.
 
 ## 🏗️ Project Structure
 
@@ -169,12 +171,13 @@ career-advisor/
 ## 🔧 Troubleshooting
 
 ### API Key Issues
-- If you see "Failed to generate roadmap" errors, verify your OpenRouter API key is valid
-- Ensure you have sufficient credits in your OpenRouter account
+- If you see "Failed to generate roadmap" errors, verify `GEMINI_API_KEY` and `GEMINI_MODEL` are correct
+- Check your Google AI Studio project quota and model availability
 
 ### Rate Limiting
 - "Too many requests" error indicates you've exceeded the rate limit
 - Wait for the specified time or adjust the rate limit in your `.env.local` file
+- If a lesson error says Gemini is rate-limiting requests, wait before retrying and check your Google AI Studio project quota and model limits.
 
 ### Model Errors
 - If roadmaps are incomplete or poorly formatted, try using a more capable model
@@ -183,4 +186,4 @@ career-advisor/
 
 ### Loading Issues
 - If the application gets stuck loading, check your network connection
-- OpenRouter API response times can vary significantly (from a few seconds to longer periods) depending on the latency of the AI provider selected
+- Gemini API response times can vary depending on service load and network latency

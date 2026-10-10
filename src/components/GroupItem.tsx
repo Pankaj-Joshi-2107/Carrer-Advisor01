@@ -9,6 +9,7 @@ interface GroupItemProps {
     group?: string;
     hasIncoming?: boolean;
     hasOutgoing?: boolean;
+    topicStatus?: 'Not started' | 'In progress' | 'Completed';
   };
 }
 
@@ -70,8 +71,10 @@ const GroupItem = memo(({ data }: GroupItemProps) => {
         />
       )}
       
-      <div 
-        className="px-4 py-3 rounded-lg transition-all duration-200 group-hover:scale-105 min-w-[200px] max-w-[240px]"
+      <button
+        type="button"
+        aria-label={`Open ${data.name} topic details${data.topicStatus === 'Completed' ? ', completed' : ''}`}
+        className="relative block cursor-pointer px-4 py-3 rounded-lg text-left transition-all duration-200 group-hover:scale-105 min-w-[200px] max-w-[240px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
         style={{ 
           backgroundColor: colors.background,
           borderColor: colors.border,
@@ -79,7 +82,7 @@ const GroupItem = memo(({ data }: GroupItemProps) => {
           boxShadow: `0 4px 10px ${colors.shadow}`,
         }}
       >
-        <div className="flex items-center mb-2">
+        <div className="mb-2 flex items-center pr-6">
           <div 
             className="w-3 h-3 rounded-full mr-2" 
             style={{ backgroundColor: colors.text }}
@@ -100,7 +103,22 @@ const GroupItem = memo(({ data }: GroupItemProps) => {
         >
           {data.description}
         </p>
-      </div>
+        <span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+          data.topicStatus === 'Completed'
+            ? 'bg-emerald-100 text-emerald-800'
+            : data.topicStatus === 'In progress'
+              ? 'bg-amber-100 text-amber-800'
+              : 'bg-white/70 text-slate-600'
+        }`}>
+          {data.topicStatus ?? 'Not started'}
+        </span>
+        {data.topicStatus === 'Completed' && (
+          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white" aria-label="Completed">✓</span>
+        )}
+        {data.topicStatus === 'In progress' && (
+          <span className="absolute right-2 top-2 h-3 w-3 rounded-full border-2 border-amber-500 bg-amber-100" aria-label="In progress" />
+        )}
+      </button>
 
       {showRightHandle && (
         <Handle 

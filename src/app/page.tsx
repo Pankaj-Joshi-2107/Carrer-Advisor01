@@ -4,12 +4,15 @@ import { useState, useEffect, useRef } from 'react';
 import { JobTitleSchema } from '../schemas/jobTitleSchema';
 import SearchInput from '@/components/SearchInput';
 import RoadmapVisualizer from '@/components/RoadmapVisualizer';
+import CommunityRoadmaps from '@/components/CommunityRoadmaps';
+import CustomRoadmapBuilder from '@/components/CustomRoadmapBuilder';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import Footer from '@/components/Footer';
 import Features from '@/components/Features';
 import { fetchRoadmap } from '@/utils/api';
 import Header from '@/components/Header';
 import { RoadmapData } from '@/types/roadmap';
+import { loadRecentRoadmap, PublishedRoadmap, saveRecentRoadmap } from '@/utils/learningStore';
 import Script from 'next/script';
 import dynamic from 'next/dynamic';
 
@@ -20,13 +23,23 @@ export default function Home() {
   const [searchedJob, setSearchedJob] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [storageWarning, setStorageWarning] = useState<string | null>(null);
   const [loadingStage, setLoadingStage] = useState<number>(0);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [isClosing, setIsClosing] = useState<boolean>(false);
+  const [showCustomRoadmapBuilder, setShowCustomRoadmapBuilder] = useState(false);
   
   const [showLoadingPopup, setShowLoadingPopup] = useState<boolean>(false);
   const loadingPopupRef = useRef<HTMLDivElement>(null);
   const [animationData, setAnimationData] = useState<any>(null);
+
+  useEffect(() => {
+    const recentRoadmap = loadRecentRoadmap();
+    if (recentRoadmap) {
+      setRoadmapData(recentRoadmap.data);
+      setSearchedJob(recentRoadmap.jobTitle);
+    }
+  }, []);
 
   const handleClosePopup = () => {
     setIsClosing(true);
@@ -50,7 +63,7 @@ export default function Home() {
   }, [showPopup]);
 
   useEffect(() => {
-    if (showLoadingPopup || showPopup) {
+    if (showLoadingPopup || showPopup || showCustomRoadmapBuilder) {
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
@@ -63,7 +76,7 @@ export default function Home() {
       document.body.style.overflow = 'unset';
       document.body.style.paddingRight = '0px';
     };
-  }, [showLoadingPopup, showPopup]);
+  }, [showCustomRoadmapBuilder, showLoadingPopup, showPopup]);
 
   useEffect(() => {
     const loadAnimation = async () => {
@@ -83,6 +96,7 @@ export default function Home() {
   const handleSearch = async (jobTitle: string) => {
     if (jobTitle === '') {
       setError(null);
+      setStorageWarning(null);
       return;
     }
 
@@ -95,6 +109,7 @@ export default function Home() {
     }
 
     setError(null);
+    setStorageWarning(null);
     setRoadmapData(null);
     setShowPopup(false);
     setSearchedJob(validationResult.data);
@@ -113,6 +128,12 @@ export default function Home() {
       
       const data = await fetchRoadmap(validationResult.data);
       setRoadmapData(data);
+      try {
+        saveRecentRoadmap({ jobTitle: validationResult.data, data });
+      } catch (storageError) {
+        console.error('Could not save the generated roadmap locally:', storageError);
+        setStorageWarning('This roadmap was generated, but this browser could not save it for reopening after a refresh.');
+      }
       
       clearInterval(loadingInterval);
       
@@ -130,6 +151,14 @@ export default function Home() {
       setIsLoading(false);
       setLoadingStage(0);
     }
+  };
+
+  const handleOpenPublishedRoadmap = (roadmap: PublishedRoadmap) => {
+    setRoadmapData(roadmap.data);
+    setSearchedJob(roadmap.targetCareer);
+    setError(null);
+    setIsClosing(false);
+    setShowPopup(true);
   };
 
   return (
@@ -173,12 +202,24 @@ export default function Home() {
                 <div className="mt-8 w-full">
                   <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-100 p-4 sm:p-6 transform transition-all duration-300 hover:shadow-xl">
                     <SearchInput onSearch={handleSearch} isLoading={isLoading} />
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomRoadmapBuilder(true)}
+                      className="mt-4 w-full rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100"
+                    >
+                      Create Custom Roadmap
+                    </button>
                     
                     {error && (
                       <div className="mt-4">
                         <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded-lg" role="alert" aria-live="assertive">
                           <p className="text-red-700 text-sm">{error}</p>
                         </div>
+                      </div>
+                    )}
+                    {storageWarning && (
+                      <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3" role="status">
+                        <p className="text-sm text-amber-900">{storageWarning}</p>
                       </div>
                     )}
                   </div>
@@ -244,6 +285,9 @@ export default function Home() {
             
             <Features />
           </div>
+          <div className="container mx-auto max-w-7xl px-4 md:px-6">
+            <CommunityRoadmaps onOpenRoadmap={handleOpenPublishedRoadmap} />
+          </div>
         </main>
 
         {showLoadingPopup && (
@@ -256,6 +300,10 @@ export default function Home() {
               <LoadingAnimation stage={loadingStage} />
             </div>
           </div>
+        )}
+
+        {showCustomRoadmapBuilder && (
+          <CustomRoadmapBuilder onClose={() => setShowCustomRoadmapBuilder(false)} />
         )}
 
         {showPopup && (
@@ -297,7 +345,7 @@ export default function Home() {
                     />
                   </svg>
                 </button>
-                {roadmapData && <RoadmapVisualizer data={roadmapData} />}
+                {roadmapData && <RoadmapVisualizer data={roadmapData} careerTitle={searchedJob} />}
               </div>
             </div>
           </div>
