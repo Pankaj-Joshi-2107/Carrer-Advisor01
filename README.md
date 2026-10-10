@@ -30,7 +30,6 @@ Built with Next.js and ReactFlow, the application displays intuitive, color-code
 - [Project Structure](#️-project-structure)
 - [Troubleshooting](#-troubleshooting)
 - [Deployment](#-deployment)
-- [License](#-license)
 
 ## ✨ Features
 
@@ -187,7 +186,3 @@ career-advisor/
 ### Loading Issues
 - If the application gets stuck loading, check your network connection
 - OpenRouter API response times can vary significantly (from a few seconds to longer periods) depending on the latency of the AI provider selected
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
