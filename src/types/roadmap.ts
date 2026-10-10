@@ -13,6 +13,8 @@ export interface RoadmapLink {
 }
 
 export interface RoadmapData {
+  riskLevel?: 'low' | 'medium' | 'high';
+  warning?: string | null;
   nodes: Array<{
     id: string;
     name: string;

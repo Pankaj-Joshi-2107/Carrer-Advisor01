@@ -1,8 +1,8 @@
-# Product Requirements Document (PRD): Career Advisor - AI-Powered Career Roadmap Generator
+# Product Requirements Document (PRD): Lumina - AI-Powered Career Roadmap Generator
 
 ## 1. Overview
 
-The Career Advisor is an AI-powered web application that generates detailed career roadmaps for various job titles. Using the Google Gemini API through Google AI Studio, the application creates visualizations of skills, technologies, and knowledge areas required for specific career paths.
+Lumina is an AI-powered web application that generates detailed career roadmaps for various job titles. Using the Google Gemini API through Google AI Studio, the application creates visualizations of skills, technologies, and knowledge areas required for specific career paths.
 
 ## 2. Target Audience
 
@@ -72,11 +72,11 @@ The Career Advisor is an AI-powered web application that generates detailed care
 ### 6.1 Home Page Layout
 
 1. **Header**
-   - Logo/Brand name ("Career Advisor")
+   - Logo/Brand name ("Lumina")
    - Navigation links (GitHub, LinkedIn, About)
 
 2. **Hero Section**
-   - Headline: "Discover your career, plan your future"
+   - Headline: "Illuminate Your Path. Actionable Steps, Instantly."
    - Subheadline: "Create the roadmap you need to reach your professional goals with our AI-powered career planning tool."
    - Search input with "Plan My Career" button
    - Error message display area

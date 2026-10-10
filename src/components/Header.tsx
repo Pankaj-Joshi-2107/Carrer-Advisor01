@@ -45,7 +45,7 @@ const Header = () => {
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold text-slate-800 md:leading-tight leading-[18px]">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Career</span> Advisor
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Lumina</span>
               </span>
               <span className="text-xs text-slate-500">Your Path to Success</span>
             </div>
@@ -90,10 +90,10 @@ const Header = () => {
                 <div className="absolute right-0 mt-3 w-72 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-lg p-5 z-10 animate-fadeIn">
                   <div className="absolute -top-2 right-4 w-4 h-4 bg-white/95 border-t border-l border-slate-200 transform rotate-45"></div>
                   <h3 className="text-lg font-semibold text-slate-800 mb-2">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">About</span> Career Advisor
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">About</span> Lumina
                   </h3>
                   <p className="text-sm text-slate-600">
-                    Career Advisor provides AI-driven career roadmaps. Enter a job title to get a personalized, step-by-step guide for your chosen profession, including essential skills, relevant technologies, and potential career milestones based on industry trends.
+                    Lumina provides AI-driven career roadmaps. Enter a job title to get a personalized, step-by-step guide for your chosen profession, including essential skills, relevant technologies, and potential career milestones based on industry trends.
                   </p>
                 </div>
               )}

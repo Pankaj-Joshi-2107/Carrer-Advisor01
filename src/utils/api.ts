@@ -1,6 +1,8 @@
 import axios from 'axios';
 
 interface RoadmapResponse {
+  riskLevel?: 'low' | 'medium' | 'high';
+  warning?: string | null;
   nodes: Array<{
     id: string;
     name: string;
@@ -13,9 +15,12 @@ interface RoadmapResponse {
   }>;
 }
 
-export async function fetchRoadmap(jobTitle: string): Promise<RoadmapResponse> {
+export async function fetchRoadmap(
+  jobTitle: string,
+  level: 'Beginner' | 'Intermediate' | 'Expert',
+): Promise<RoadmapResponse> {
   try {
-    const response = await axios.post<RoadmapResponse>('/api/roadmap', { jobTitle });
+    const response = await axios.post<RoadmapResponse>('/api/roadmap', { jobTitle, level });
     return response.data;
   } catch (error) {
     console.error('Error fetching roadmap:', error);

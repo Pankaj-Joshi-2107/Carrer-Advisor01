@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { TopicLearningContent } from '@/types/learning';
-import { requestGeminiCompletion } from '@/utils/gemini';
+import { hasGeminiCredentials, requestGeminiCompletion } from '@/utils/gemini';
 
 const rateLimitEnabled = process.env.NODE_ENV === 'production' || process.env.DISABLE_RATE_LIMIT !== 'true';
 const ratelimit = rateLimitEnabled
@@ -186,9 +186,9 @@ export async function POST(request: Request) {
     if (!input.success) {
       return NextResponse.json({ message: 'Invalid topic request.' }, { status: 400 });
     }
-    if (!process.env.GEMINI_API_KEY || !process.env.GEMINI_MODEL) {
+    if (!hasGeminiCredentials()) {
       return NextResponse.json(
-        { message: 'Topic lessons need GEMINI_API_KEY and GEMINI_MODEL configured.' },
+        { message: 'Topic lessons need at least one Gemini API key and GEMINI_MODEL configured.' },
         { status: 503 },
       );
     }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { z } from 'zod';
-import { requestGeminiCompletion } from '@/utils/gemini';
+import { hasGeminiCredentials, requestGeminiCompletion } from '@/utils/gemini';
 
 const rateLimitRequestsPerMinute = parseInt(process.env.RATE_LIMIT_REQUESTS_PER_MINUTE || '10', 10);
 const ratelimit = process.env.NODE_ENV === 'production' || process.env.DISABLE_RATE_LIMIT !== 'true'
@@ -89,9 +89,9 @@ export async function POST(request: Request) {
     if (!parsedInput.success) {
       return NextResponse.json({ message: 'Invalid custom roadmap request.' }, { status: 400 });
     }
-    if (!process.env.GEMINI_API_KEY || !process.env.GEMINI_MODEL) {
+    if (!hasGeminiCredentials()) {
       return NextResponse.json(
-        { message: 'AI assistance requires GEMINI_API_KEY and GEMINI_MODEL.' },
+        { message: 'AI assistance requires at least one Gemini API key and GEMINI_MODEL.' },
         { status: 503 },
       );
     }

@@ -1,6 +1,6 @@
-# Career Advisor - AI-Powered Career Roadmap Generator
+# Lumina - AI-Powered Career Roadmap Generator
 
-![Career Advisor - AI-Powered Career Roadmap Generator](public/homepage-hero.png)
+![Lumina - AI-Powered Career Roadmap Generator](public/homepage-hero.png)
 
 <br />
 
@@ -39,6 +39,7 @@ Built with Next.js and ReactFlow, the application displays intuitive, color-code
 - Color-coding based on skill importance
 - Responsive design
 - API rate limiting
+- AI-generated industry risk warnings for roles with elevated automation or economic-instability risks; use these as general guidance, not as a prediction or guarantee
 
 ## 🛠️ Built With
 
@@ -82,6 +83,8 @@ NEXT_PUBLIC_URL=http://localhost:3000
 # Gemini Configuration
 # Get an API key from https://aistudio.google.com/app/apikey
 GEMINI_API_KEY=<your-gemini-api-key>
+# Optional: comma-separated backup keys; tried when the primary key fails
+GEMINI_API_KEYS=<backup-gemini-api-key-1>,<backup-gemini-api-key-2>
 # Use a Gemini model available to your Google AI Studio project
 GEMINI_MODEL=gemini-3.8-flash
 
@@ -128,6 +131,7 @@ This application uses the Google Gemini API through Google AI Studio for both ro
 
 #### Model Environment Variables
 - `GEMINI_API_KEY`: A server-side API key created in Google AI Studio. Never expose it in client-side code.
+- `GEMINI_API_KEYS` (optional): Additional comma-separated server-side Gemini API keys. The app tries the primary key first, then these keys for authentication failures, rate limits, and retryable provider errors. Keep every key private and configure this variable in the hosting provider's server-side environment settings as well as `.env.local` when developing locally.
 - `GEMINI_MODEL`: A Gemini model ID enabled for your AI Studio project. The same model is used for roadmaps and topic lessons.
 - `GEMINI_FALLBACK_MODELS` (optional): Up to five comma-separated Gemini model IDs tried in order if the primary model is rate-limited, unavailable, or returns a temporary server error. Use text-generation models enabled for your AI Studio project.
 
@@ -140,7 +144,7 @@ GEMINI_FALLBACK_MODELS=gemini-3.1-pro-preview,gemini-2.5-flash,gemini-2.5-flash-
 
 ### Rate Limiting
 The application includes rate limiting to prevent abuse. By default, it allows 5 requests per minute per IP address. You can adjust this by changing the `RATE_LIMIT_REQUESTS_PER_MINUTE` value in your `.env.local` file. For local development without Upstash Redis, set `DISABLE_RATE_LIMIT=true`; this setting is ignored in production.
-Gemini API quotas and rate limits are managed by Google AI Studio. Requests try the primary model and then up to five configured fallback models for rate limits, unavailable models, and temporary provider errors. Check the project quota and model access if all configured models fail.
+Gemini API quotas and rate limits are managed by Google AI Studio. For each model, requests try `GEMINI_API_KEY` followed by each key in `GEMINI_API_KEYS`; if all keys fail with a retryable error, the configured fallback models are tried. Check key validity, project quotas, and model access if every configured combination fails.
 
 ### Interactive Learning and Roadmap Library
 - Selecting a roadmap node requests an AI-generated lesson with prerequisites, objectives, examples, resources, activities, and a knowledge check. Verify generated facts and links before relying on them.

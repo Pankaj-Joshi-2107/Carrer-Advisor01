@@ -3,11 +3,13 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { RoadmapData } from '@/types/roadmap';
 import { JobTitleSchema } from '@/schemas/jobTitleSchema';
-import { requestGeminiCompletion } from '@/utils/gemini';
+import { hasGeminiCredentials, requestGeminiCompletion } from '@/utils/gemini';
+import { z } from 'zod';
 
-interface RequestBody {
-  jobTitle: string;
-}
+const RequestSchema = z.object({
+  jobTitle: JobTitleSchema,
+  level: z.enum(['Beginner', 'Intermediate', 'Expert']).default('Beginner'),
+});
 
 const rateLimitRequestsPerMinute = parseInt(process.env.RATE_LIMIT_REQUESTS_PER_MINUTE || "10", 10);
 const rateLimitEnabled = process.env.NODE_ENV === "production" || process.env.DISABLE_RATE_LIMIT !== "true";
@@ -42,23 +44,20 @@ export async function POST(request: Request) {
       }
     }
 
-    const body = await request.json() as RequestBody;
-
-    const validationResult = JobTitleSchema.safeParse(body.jobTitle);
-
+    const validationResult = RequestSchema.safeParse(await request.json());
     if (!validationResult.success) {
-      const errorMessage = validationResult.error.format()._errors.join(', ');
+      const errorMessage = validationResult.error.issues.map((issue) => issue.message).join(', ');
       return NextResponse.json(
         { message: errorMessage },
         { status: 400 }
       );
     }
 
-    const jobTitle = validationResult.data;
+    const { jobTitle, level } = validationResult.data;
 
-    if (!process.env.GEMINI_API_KEY || !process.env.GEMINI_MODEL) {
+    if (!hasGeminiCredentials()) {
       return NextResponse.json(
-        { message: 'Roadmap generation needs GEMINI_API_KEY and GEMINI_MODEL configured.' },
+        { message: 'Roadmap generation needs at least one Gemini API key and GEMINI_MODEL configured.' },
         { status: 503 },
       );
     }
@@ -73,6 +72,19 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         'model': process.env.GEMINI_MODEL,
         'messages': [
+          {
+            'role': 'system',
+            'content': `The user has identified as a ${level} learner. Adjust the difficulty and depth of the generated roadmap accordingly.
+If Beginner: Include foundational steps, explain basic concepts, and recommend introductory resources.
+If Intermediate: Skip basics, focus on advanced applications, complex projects, and niche specialization.
+If Expert: Focus on leadership, architecture, teaching others, and cutting-edge research.
+Ensure the roadmap sequence, node descriptions, and recommendations match the learner's selected level.
+
+Analyze the requested job title for susceptibility to AI automation and economic instability.
+If the risk is high, set 'riskLevel' to 'high' and provide a concise, helpful warning message in the 'warning' field suggesting alternative career pivots or hybrid skills.
+If the risk is low or medium, set 'riskLevel' to 'low' or 'medium' and leave the warning field empty or null.
+Base the risk assessment on the role requested, avoid overstating certainty, and ensure the generated roadmap's difficulty and depth match the identified risk and learner level.`,
+          },
           {
             'role': 'user',
             'content': `Generate a detailed learning roadmap for a ${jobTitle}. The response MUST be a valid JSON object with the following structure:
@@ -92,7 +104,9 @@ export async function POST(request: Request) {
                   "target": "string (child node id)",
                   "type": "string"
                 }
-              ]
+              ],
+              "riskLevel": "low | medium | high",
+              "warning": "string or null"
             }
 
             Requirements for the roadmap structure:
@@ -306,7 +320,14 @@ export async function POST(request: Request) {
       };
     }
     
-    return NextResponse.json(roadmapData);
+    const riskLevel = ['low', 'medium', 'high'].includes(roadmapData.riskLevel ?? '')
+      ? roadmapData.riskLevel
+      : undefined;
+    const warning = typeof roadmapData.warning === 'string'
+      ? roadmapData.warning.trim().slice(0, 600) || null
+      : null;
+
+    return NextResponse.json({ ...roadmapData, riskLevel, warning });
   } catch (error) {
     console.error('Error in POST /api/roadmap:', error);
     return NextResponse.json(

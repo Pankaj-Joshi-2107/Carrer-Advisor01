@@ -28,7 +28,7 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-lg font-bold text-slate-800">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Career</span> Advisor
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Lumina</span>
               </span>
             </div>
             <p className="text-slate-600 text-sm md:max-w-md">

@@ -18,9 +18,32 @@ import dynamic from 'next/dynamic';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
+function CareerRiskAlert({ warning }: { warning: string }) {
+  return (
+    <div
+      role="alert"
+      className="mb-4 flex items-start gap-3 rounded-lg border border-amber-400 bg-yellow-100 p-4 text-amber-950 shadow-sm"
+    >
+      <span className="text-xl" aria-hidden="true">⚠️</span>
+      <p className="text-sm leading-relaxed">
+        <strong>Industry Alert:</strong> This role faces significant automation risks. Here is how to adapt:{' '}
+        {warning}
+      </p>
+    </div>
+  );
+}
+
+function getCareerRiskWarning(data: RoadmapData): string | null {
+  if (data.riskLevel !== 'high') return null;
+  return typeof data.warning === 'string' && data.warning.trim()
+    ? data.warning.trim()
+    : 'Consider building complementary skills that combine your expertise with human judgment, communication, or oversight.';
+}
+
 export default function Home() {
   const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null);
   const [searchedJob, setSearchedJob] = useState<string>('');
+  const [currentSkillLevel, setCurrentSkillLevel] = useState<'Beginner' | 'Intermediate' | 'Expert'>('Beginner');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [storageWarning, setStorageWarning] = useState<string | null>(null);
@@ -28,6 +51,7 @@ export default function Home() {
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [isClosing, setIsClosing] = useState<boolean>(false);
   const [showCustomRoadmapBuilder, setShowCustomRoadmapBuilder] = useState(false);
+  const careerRiskWarning = roadmapData ? getCareerRiskWarning(roadmapData) : null;
   
   const [showLoadingPopup, setShowLoadingPopup] = useState<boolean>(false);
   const loadingPopupRef = useRef<HTMLDivElement>(null);
@@ -126,7 +150,7 @@ export default function Home() {
         });
       }, 2000);
       
-      const data = await fetchRoadmap(validationResult.data);
+      const data = await fetchRoadmap(validationResult.data, currentSkillLevel);
       setRoadmapData(data);
       try {
         saveRecentRoadmap({ jobTitle: validationResult.data, data });
@@ -167,7 +191,7 @@ export default function Home() {
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebApplication",
-          "name": "Career Advisor",
+          "name": "Lumina",
           "url": process.env.NEXT_PUBLIC_URL,
           "description": "AI-powered career planning tool that creates personalized roadmaps for professional growth.",
           "applicationCategory": "Career Development Tool",
@@ -190,9 +214,9 @@ export default function Home() {
                 <div className="relative">
                   <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-slate-800 tracking-tight leading-tight">
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                      Discover
+                      Illuminate
                     </span>{" "}
-                    your career,<br />plan your future
+                    Your Path.<br />Actionable Steps, Instantly.
                   </h1>
                 </div>
                 <p className="text-xl text-slate-600 leading-relaxed">
@@ -201,6 +225,41 @@ export default function Home() {
                 
                 <div className="mt-8 w-full">
                   <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-100 p-4 sm:p-6 transform transition-all duration-300 hover:shadow-xl">
+                    <div className="mb-3">
+                      <div className="mb-1 flex items-center gap-2">
+                        <label htmlFor="current-skill-level" className="text-sm font-medium text-slate-700">
+                          Current Skill Level
+                        </label>
+                        <span className="group relative inline-flex">
+                          <button
+                            type="button"
+                            aria-label="About current skill level"
+                            aria-describedby="skill-level-tooltip"
+                            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-400 text-[10px] font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            i
+                          </button>
+                          <span
+                            id="skill-level-tooltip"
+                            role="tooltip"
+                            className="invisible absolute left-6 top-1/2 z-10 w-64 -translate-y-1/2 rounded-md bg-slate-800 px-3 py-2 text-xs font-normal text-white opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+                          >
+                            This helps us tailor the roadmap to your current knowledge.
+                          </span>
+                        </span>
+                      </div>
+                      <select
+                        id="current-skill-level"
+                        value={currentSkillLevel}
+                        onChange={(event) => setCurrentSkillLevel(event.target.value as typeof currentSkillLevel)}
+                        disabled={isLoading}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Expert">Expert</option>
+                      </select>
+                    </div>
                     <SearchInput onSearch={handleSearch} isLoading={isLoading} />
                     <button
                       type="button"
@@ -228,6 +287,7 @@ export default function Home() {
                 {roadmapData && !isLoading && (
                   <div className="mt-8 pt-6 border-t border-gray-200">
                     <div className="text-left">
+                      {careerRiskWarning && <CareerRiskAlert warning={careerRiskWarning} />}
                       <h3 className="text-xl font-semibold text-gray-800 mb-2">
                         Your career roadmap for <span className="text-emerald-600">{searchedJob}</span> is ready!
                       </h3>
@@ -345,7 +405,16 @@ export default function Home() {
                     />
                   </svg>
                 </button>
-                {roadmapData && <RoadmapVisualizer data={roadmapData} careerTitle={searchedJob} />}
+                {roadmapData && (
+                  <div className="h-full overflow-y-auto">
+                    {careerRiskWarning && (
+                      <div className="px-4 pt-4">
+                        <CareerRiskAlert warning={careerRiskWarning} />
+                      </div>
+                    )}
+                    <RoadmapVisualizer data={roadmapData} careerTitle={searchedJob} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
