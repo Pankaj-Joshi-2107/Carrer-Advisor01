@@ -1,0 +1,242 @@
+@import "tailwindcss";
+
+@theme {
+  --shadow-footer: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,  rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translate3d(0, 20px, 0) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(0, 20px, 0) scale(0.98);
+    opacity: 0;
+  }
+}
+
+.popup-overlay {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.popup-overlay-exit {
+  animation: fadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.popup-content {
+  animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.popup-content-exit {
+  animation: slideOutDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.rocketman {
+  animation: animateRocketman 15s ease infinite;
+}
+
+@keyframes animateRocketman {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  10% {
+    transform: translate(3%, -2%) scale(1.02) rotate(1deg);
+  }
+  25% {
+    transform: translate(-2%, 1%) scale(0.98) rotate(-1deg);
+  }
+  40% {
+    transform: translate(1%, -1%) scale(1.01) rotate(0.5deg);
+  }
+  60% {
+    transform: translate(-1%, 3%) scale(0.99) rotate(-0.5deg);
+  }
+  75% {
+    transform: translate(2%, -2%) scale(1.03) rotate(1deg);
+  }
+  90% {
+    transform: translate(-3%, 1%) scale(0.97) rotate(-1deg);
+  }
+}
+
+@keyframes animateCloud {
+  0% {
+    margin-left: -1000px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  80% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.1;
+  }
+  100% {
+    margin-left: 100%;
+    opacity: 0;
+  }
+}
+
+.cloud-w-1 {
+  animation: animateCloud 15s linear infinite;
+  transform: scale(0.3);
+}
+
+.cloud-w-2 {
+  animation: animateCloud 12s linear infinite;
+  transform: scale(0.7);
+}
+
+.cloud-w-3 {
+  animation: animateCloud 20s linear infinite;
+  transform: scale(0.5);
+}
+
+.cloud-w-4 {
+  animation: animateCloud 14s linear infinite;
+  transform: scale(0.4);
+}
+
+.cloud-w-5 {
+  animation: animateCloud 18s linear infinite;
+  transform: scale(0.55);
+}
+
+.cloud {
+  background: #fff;
+  background: linear-gradient(top, #fff 5%, #f1f1f1 100%);
+  border-radius: 100px;
+  box-shadow: 0 8px 5px rgba(0, 0, 0, 0.1);
+  height: 120px;
+  position: relative;
+  width: 350px;
+}
+
+.cloud:after, .cloud:before {
+  background: #fff;
+  content: '';
+  position: absolute;
+  z-indeX: -1;
+}
+
+.cloud:after {
+  border-radius: 100px;
+  height: 100px;
+  left: 50px;
+  top: -50px;
+  width: 100px;
+}
+
+.cloud:before {
+  border-radius: 200px;
+  width: 180px;
+  height: 180px;
+  right: 50px;
+  top: -90px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
