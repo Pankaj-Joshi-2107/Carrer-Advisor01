@@ -95,6 +95,8 @@ UPSTASH_REDIS_REST_TOKEN=<your-upstash-redis-rest-token>
 # Rate Limiting Configuration
 # Number of requests allowed per minute per IP
 RATE_LIMIT_REQUESTS_PER_MINUTE=5
+# For local development only; rate limiting remains enabled in production
+DISABLE_RATE_LIMIT=true
 ```
 
 4. Run the development server:
@@ -127,29 +129,25 @@ This application uses OpenRouter to access various AI models. Different models w
 - `openai/o3-mini-high` - Higher quality results with more nuanced roadmaps
 - `anthropic/claude-3-opus` - Premium option for the most detailed and comprehensive roadmaps
 
-You can change the model by updating the `OPENROUTER_CHECK_MODEL` and `OPENROUTER_ROADMAP_MODEL` environment variables in your `.env.local` file.
+Set `OPENROUTER_ROADMAP_MODEL` in your `.env.local` file to choose the model that generates roadmaps. Job titles are checked locally for valid length and characters before the request.
 
 #### Model Environment Variables
-- `OPENROUTER_CHECK_MODEL`: This model is used to validate job titles. It receives a simple prompt asking if the entered text is a valid job title and expects a yes/no response. Since this is a simple classification task, you can use faster and more cost-effective models here.
-
 - `OPENROUTER_ROADMAP_MODEL`: This model generates the comprehensive career roadmap content. It receives a complex prompt requesting detailed skill hierarchies in a specific JSON format. This task benefits from more capable models with strong reasoning and structuring abilities.
 
-For both variables, you can use the same model or different ones depending on your needs and budget. The recommended starting configuration is:
+The recommended starting configuration is:
 
 ```
-OPENROUTER_CHECK_MODEL=google/gemini-flash-1.5-8b
 OPENROUTER_ROADMAP_MODEL=google/gemini-2.0-flash-lite-001
 ```
 
 For higher quality results, especially for specialized or technical roles, consider:
 
 ```
-OPENROUTER_CHECK_MODEL=google/gemini-2.0-flash-lite-001
 OPENROUTER_ROADMAP_MODEL=anthropic/claude-3-opus
 ```
 
 ### Rate Limiting
-The application includes rate limiting to prevent abuse. By default, it allows 5 requests per minute per IP address. You can adjust this by changing the `RATE_LIMIT_REQUESTS_PER_MINUTE` value in your `.env.local` file.
+The application includes rate limiting to prevent abuse. By default, it allows 5 requests per minute per IP address. You can adjust this by changing the `RATE_LIMIT_REQUESTS_PER_MINUTE` value in your `.env.local` file. For local development without Upstash Redis, set `DISABLE_RATE_LIMIT=true`; this setting is ignored in production.
 
 ## 🏗️ Project Structure
 

@@ -9,31 +9,36 @@ interface RequestBody {
 }
 
 const rateLimitRequestsPerMinute = parseInt(process.env.RATE_LIMIT_REQUESTS_PER_MINUTE || "10", 10);
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(rateLimitRequestsPerMinute, "60 s"),
-  analytics: true,
-  prefix: "@upstash/ratelimit/roadmap",
-});
+const rateLimitEnabled = process.env.NODE_ENV === "production" || process.env.DISABLE_RATE_LIMIT !== "true";
+const ratelimit = rateLimitEnabled
+  ? new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(rateLimitRequestsPerMinute, "60 s"),
+      analytics: true,
+      prefix: "@upstash/ratelimit/roadmap",
+    })
+  : null;
 
 export async function POST(request: Request) {
   try {
-    const identifier = "api/roadmap";
-    const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
+    if (ratelimit) {
+      const identifier = "api/roadmap";
+      const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
 
-    if (!success) {
-      const retryAfterSeconds = Math.ceil((reset - Date.now()) / 1000);
-      return NextResponse.json(
-        { message: `Too many requests. Please try again in ${retryAfterSeconds} seconds.` },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': limit.toString(),
-            'X-RateLimit-Remaining': remaining.toString(),
-            'X-RateLimit-Reset': reset.toString(),
+      if (!success) {
+        const retryAfterSeconds = Math.ceil((reset - Date.now()) / 1000);
+        return NextResponse.json(
+          { message: `Too many requests. Please try again in ${retryAfterSeconds} seconds.` },
+          {
+            status: 429,
+            headers: {
+              'X-RateLimit-Limit': limit.toString(),
+              'X-RateLimit-Remaining': remaining.toString(),
+              'X-RateLimit-Reset': reset.toString(),
+            },
           },
-        }
-      );
+        );
+      }
     }
 
     const body = await request.json() as RequestBody;
@@ -50,36 +55,6 @@ export async function POST(request: Request) {
 
     const jobTitle = validationResult.data;
     
-    const validationResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        'model': process.env.OPENROUTER_CHECK_MODEL,
-        'messages': [
-          {
-            'role': 'user',
-            'content': `Is "${jobTitle}" a valid job title? Answer only with "yes" or "no".`
-          }
-        ],
-        'provider': {
-          'sort': 'price'
-        }
-      })
-    });
-
-    const validationData = await validationResponse.json();
-    const isValid = validationData.choices[0].message.content.toLowerCase().includes('yes');
-
-    if (!isValid) {
-      return NextResponse.json(
-        { message: 'Please enter a valid job title' },
-        { status: 400 }
-      );
-    }
-
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
